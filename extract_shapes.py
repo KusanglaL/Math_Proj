@@ -263,29 +263,6 @@ def extract_shapes_and_dimensions(text):
 
             elif shape=='rhombus':
               shape_list.append(shape)
-              #match=re.search(r'(\d+\.?\d*)\s*cm\s*(and|,)(\d+\.?\d*)\s*cm',text)
-              # diagonal1=re.search(r'(\d+\.?\d*)\s*cm\s*(and|,)?',text)
-              # diagonal1=diagonal1.group(1)
-              # diagonal2=re.search(r'(and+|,+)?(\d+\.?\d*)\s*cm',text)
-              # diagonal2=diagonal2.group(2)
-              # if match:
-              #   print("Match found!")
-              #   print("Group 1:", match.group(1))
-              #   print("Group 2:", match.group(3))
-              #   dimensions['rhombus_diagonal1']=float(match.group(1))
-              #   dimensions['rhombus_diagonal2']=float(match.group(3))
-              # else:
-              #   print("No match found.")
-              #   dimensions['rhombus_diagonal1']=4
-              #   dimensions['rhombus_diagonal2']=3
-              # if diagonal1:
-              #   dimensions['radius_diagonal1']=float(diagonal1)
-              # else:
-              #   dimensions['radius_diagonal1']=4
-              # if diagonal2:
-              #   dimensions['radius_diagonal2']=float(diagonal2)
-              # else:
-              #   dimensions['radius_diagonal2']=3
               diagonals=re.search(r'diagonals?\s*(\d+\.?\d*)\s*\w*\s*(\d+\.?\d*)\b',text,re.IGNORECASE)
               if diagonals:
                 diag1=float(diagonals.group(1))
