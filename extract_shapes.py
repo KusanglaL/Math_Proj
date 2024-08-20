@@ -2,6 +2,16 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 
+import streamlit as st
+
+def shape_operations():
+    st.header("Shape Operations")
+    st.write("Here you can perform operations related to shapes.")
+    # Add your shape-related logic here
+
+    st.write("Shape processing functionality goes here...")
+
+
 def extract_shapes_and_dimensions(text):
     shapes = {'circle':['diameter','area','perimeter','circumference','sector','inscribed','circumscribed'],
               'rectangle':['area','perimeter','circumference','diagonals'],
@@ -286,6 +296,16 @@ def extract_shapes_and_dimensions(text):
               for prop in shapes[shape]:
                 if prop in text:
                   props.append(prop)
+            elif shape == 'ellipse':
+                shape_list.append(shape)
+                if 'inscribed' in text.lower() and 'rectangle' in text.lower():
+                    rect_match = re.search(r'rectangle of (?:height|width) (\d+\.?\d*) and (?:height|width) (\d+\.?\d*)', text.lower())
+                    if rect_match:
+                        dimensions['rectangle_length'] = float(rect_match.group(1))
+                        dimensions['rectangle_width'] = float(rect_match.group(2))
+                        props.append('inscribed')
+                    else:
+                        print("Failed to extract rectangle dimensions for inscribed ellipse")
 
 
 
