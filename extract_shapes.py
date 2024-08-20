@@ -26,7 +26,7 @@ def extract_shapes_and_dimensions(text):
               'octagon':['area','perimeter','circumference','angles','angle'],
               'nonagon':['area','perimeter','circumference','angles','angle'],
               'decagon':['area','perimeter','circumference','angles','angle'],
-              'ellipse':['area','perimeter','circumference']
+              'ellipse':['area','foci','inscribed']
     }
 
     plot_shapes=[]
@@ -296,19 +296,38 @@ def extract_shapes_and_dimensions(text):
               for prop in shapes[shape]:
                 if prop in text:
                   props.append(prop)
+
             elif shape == 'ellipse':
-                shape_list.append(shape)
-                if 'inscribed' in text.lower() and 'rectangle' in text.lower():
-                    rect_match = re.search(r'rectangle of (?:height|width) (\d+\.?\d*) and (?:height|width) (\d+\.?\d*)', text.lower())
-                    if rect_match:
-                        dimensions['rectangle_length'] = float(rect_match.group(1))
-                        dimensions['rectangle_width'] = float(rect_match.group(2))
-                        props.append('inscribed')
-                    else:
-                        print("Failed to extract rectangle dimensions for inscribed ellipse")
+              print("hello ellipse")
+              shape_list.append(shape)
+              axes=re.search(r'axes?\s*(\d+\.?\d*)\s*\w*\s*(\d+\.?\d*)\b',text,re.IGNORECASE)
+              if axes:
+                num1=float(axes.group(1))
+                num2=float(axes.group(2))
+                if num1>num2:
+                  dimensions['major-axis']=num1
+                  dimensions['minor-axis']=num2
+                else:
+                  dimensions['major-axis']=num1
+                  dimensions['minor-axis']=num2
+              else:
+                major_axis=re.search(r'(\d+\.?\d*)\s*(cm)?\s*(major\s*axis|major-axis)|(major\s*axis|major-axis)\s*(\d+\.?\d*)\s*(cm)?', text, re.IGNORECASE)
+                print("major axis extracted")
+                if major_axis:
+                   dimensions['major-axis']=float(major_axis.group(1) or major_axis.group(5))
+                else:
+                   dimensions['major-axis']=6 
+                minor_axis=re.search(r'(\d+\.?\d*)\s*(cm)?\s*(minor\s*axis|minor-axis)|(minor\s*axis|minor-axis)\s*\w*(\d+\.?\d*)\s*(cm)?', text, re.IGNORECASE)
+                if minor_axis:
+                   dimensions['minor-axis']=float(minor_axis.group(1) or minor_axis.group(5))
+                else:
+                   dimensions['minor-axis']=4
 
-
+              for prop in shapes[shape]:
+                if prop in text:
+                  props.append(prop)
 
             dimensions_list.append(dimensions)
-
+    print("props",props)
+    print("dimensions",dimensions_list)
     return shape_list, dimensions_list, props

@@ -160,25 +160,41 @@ def plot_shape(question, shape_list, dimensions_list, properties):
         print('Processing shape:', shape)
         
         if shape == "ellipse":
-            if 'inscribed' in props:
-                rect_length = dimensions.get('rectangle_length') or dimensions.get('rectangle_width')
-                rect_width = dimensions.get('rectangle_width') or dimensions.get('rectangle_height')
-                if rect_length is not None and rect_width is not None:
-                    print(f"Plotting inscribed ellipse: length={rect_length}, width={rect_width}")
-                    fig = plot_ellipse_within_rectangle(rect_length, rect_width, fill=False, color='blue')
-                else:
-                    print("Error: Rectangle dimensions not provided for inscribed ellipse")
+            major_axis=dimensions['major-axis']
+            minor_axis=dimensions['minor-axis']
+            shape_properties=props
+            if "area" in shape_properties:
+              filll=True
+              fig = plot_ellipse_with_area(major_axis, minor_axis, filll, color='blue')
+            elif "foci" in shape_properties:
+              filll=False
+              fig = plot_ellipse_with_foci(major_axis, minor_axis, filll, color='blue')
+            # elif "inscribed" in shape_properties:
+          
+            #   fig = plot_ellipse_within_rectangle(rect_length, rect_width, fill=False, color='blue')
             else:
-                # Existing code for regular ellipse plotting
-                major_axis = dimensions.get('ellipse_major_axis')
-                minor_axis = dimensions.get('ellipse_minor_axis')
-                if major_axis is not None and minor_axis is not None:
-                    if 'area' in props:
-                        fig = plot_ellipse_with_area(major_axis, minor_axis, fill=True, color='blue')
-                    elif 'foci' in props:
-                        fig = plot_ellipse_with_foci(major_axis, minor_axis, fill=False, color='blue')
-                    else:
-                        fig = plot_ellipse(major_axis, minor_axis, fill=False, color='blue')
+              filll=False
+              fig = plot_ellipse(major_axis, minor_axis, filll, color='blue')
+               
+            # if 'inscribed' in props:
+            #     rect_length = dimensions.get('rectangle_length') or dimensions.get('rectangle_width')
+            #     rect_width = dimensions.get('rectangle_width') or dimensions.get('rectangle_height')
+            #     if rect_length is not None and rect_width is not None:
+            #         print(f"Plotting inscribed ellipse: length={rect_length}, width={rect_width}")
+            #         fig = plot_ellipse_within_rectangle(rect_length, rect_width, fill=False, color='blue')
+            #     else:
+            #         print("Error: Rectangle dimensions not provided for inscribed ellipse")
+            # else:
+            #     # Existing code for regular ellipse plotting
+            #     major_axis = dimensions.get('ellipse_major_axis')
+            #     minor_axis = dimensions.get('ellipse_minor_axis')
+            #     if major_axis is not None and minor_axis is not None:
+            #         if 'area' in props:
+            #             fig = plot_ellipse_with_area(major_axis, minor_axis, fill=True, color='blue')
+            #         elif 'foci' in props:
+            #             fig = plot_ellipse_with_foci(major_axis, minor_axis, fill=False, color='blue')
+            #         else:
+            #             fig = plot_ellipse(major_axis, minor_axis, fill=False, color='blue')
                 
         elif shape== "circle":
           radius = dimensions['circle_radius']
