@@ -12,47 +12,118 @@ from parallelogram import plot_parallelogram, plot_parallelogram_with_area,plot_
 from rhombus import plot_rhombus, plot_rhombus_with_area,plot_rhombus_with_perimeter_or_circumfernce, plot_rhombus_with_angles
 from trapezium import plot_trapezium, plot_trapezium_with_area, plot_isosceles_trapezium, plot_right_trapezium
 from ellipse import plot_ellipse, plot_ellipse_with_area, plot_ellipse_with_foci, plot_ellipse_within_rectangle
-from equation import plot_equation
+from equation import EquationSolver  
 from extract_shapes import extract_shapes_and_dimensions
 import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 import regex as re
+import latex
+
+import streamlit as st
+from equation import EquationSolver
+from sympy import latex
+
+
+def equation_operations():
+    st.header("Equation Solver and Plotter")
+
+    # Input for the equation
+    st.write("Enter an equation in terms of x (use standard Python syntax for operations).")
+    equation = st.text_input("Enter your equation:", value="x**2 - 4")
+
+    solver = None
+
+    if equation:
+        try:
+            solver = EquationSolver(equation)  # Initialize the solver with the equation
+        except ValueError as e:
+            st.error(f"Error: {str(e)}")
+            return
+
+    # Create tabs for different operations
+    tab1, tab2, tab3, tab4 = st.tabs(["Plot", "Solve", "Derivative", "Integral"])
+
+    # Plotting the equation
+    with tab1:
+        x_min = st.number_input("Minimum x value:", value=-10.0)
+        x_max = st.number_input("Maximum x value:", value=10.0)
+
+        if st.button("Plot Equation"):
+            if solver:
+                fig = solver.plot((x_min, x_max))
+                if fig:
+                    st.pyplot(fig)
+
+    # Solving the equation
+    with tab2:
+        if st.button("Solve Equation"):
+            if solver:
+                try:
+                    solutions = solver.solve()
+                    if solutions:
+                        st.write("Solutions:")
+                        for sol in solutions:
+                            st.latex(f"x = {latex(sol)}")
+                    else:
+                        st.write("No real solutions found.")
+                except RuntimeError as e:
+                    st.error(f"Error: {str(e)}")
+
+    # Calculating the derivative
+    with tab3:
+        if st.button("Calculate Derivative"):
+            if solver:
+                try:
+                    derivative = solver.derivative()
+                    if derivative:
+                        st.write("Derivative:")
+                        st.latex(f"\\frac{{d}}{{dx}}({latex(solver.expr)}) = {latex(derivative)}")
+                except RuntimeError as e:
+                    st.error(f"Error: {str(e)}")
+
+    # Calculating the integral
+    with tab4:
+        if st.button("Calculate Integral"):
+            if solver:
+                try:
+                    integral = solver.integral()
+                    if integral:
+                        st.write("Indefinite Integral:")
+                        st.latex(f"\\int {latex(solver.expr)} \\, dx = {latex(integral)} + C")
+                except RuntimeError as e:
+                    st.error(f"Error: {str(e)}")
+
+
 
 def plot_shape(question, shape_list, dimensions_list, properties):
     dimensions = {}
-    shape_properties = []
-    props = []
     for dimension in dimensions_list:
         dimensions.update(dimension)
-    print("Dimensions:", dimensions)
-    for prop in properties:
-        props.append(prop)
-    print("Properties:", props)
+    props = properties
 
-    fig = None  # Initialize fig to None
+    fig = None
 
     for shape in shape_list:
         print('Processing shape:', shape)
         
         if shape == "ellipse":
-            shape_properties = props
-            if 'inscribed' in shape_properties or 'circumscribed' in shape_properties:
-                rect_length = dimensions.get('rectangle_length')
-                rect_width = dimensions.get('rectangle_width')
+            if 'inscribed' in props:
+                rect_length = dimensions.get('rectangle_length') or dimensions.get('rectangle_width')
+                rect_width = dimensions.get('rectangle_width') or dimensions.get('rectangle_height')
                 if rect_length is not None and rect_width is not None:
                     print(f"Plotting inscribed ellipse: length={rect_length}, width={rect_width}")
                     fig = plot_ellipse_within_rectangle(rect_length, rect_width, fill=False, color='blue')
                 else:
                     print("Error: Rectangle dimensions not provided for inscribed ellipse")
             else:
+                # Existing code for regular ellipse plotting
                 major_axis = dimensions.get('ellipse_major_axis')
                 minor_axis = dimensions.get('ellipse_minor_axis')
                 if major_axis is not None and minor_axis is not None:
-                    print(f"Plotting regular ellipse: major axis={major_axis}, minor axis={minor_axis}")
-                    if 'area' in shape_properties:
+                    if 'area' in props:
                         fig = plot_ellipse_with_area(major_axis, minor_axis, fill=True, color='blue')
-                    elif 'foci' in shape_properties:
+                    elif 'foci' in props:
                         fig = plot_ellipse_with_foci(major_axis, minor_axis, fill=False, color='blue')
                     else:
                         fig = plot_ellipse(major_axis, minor_axis, fill=False, color='blue')
