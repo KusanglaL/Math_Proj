@@ -1,5 +1,5 @@
 """
-This module contains a simple Streamlit app that demonstrates basic functionality.
+This module contains a Streamlit app that demonstrates shape and equation solving functionality.
 """
 import streamlit as st
 import string 
@@ -20,9 +20,8 @@ from parallelogram import plot_parallelogram, plot_parallelogram_with_area,plot_
 from rhombus import plot_rhombus, plot_rhombus_with_area,plot_rhombus_with_perimeter_or_circumfernce, plot_rhombus_with_angles
 from trapezium import plot_trapezium, plot_trapezium_with_area, plot_isosceles_trapezium, plot_right_trapezium
 from ellipse import plot_ellipse, plot_ellipse_with_area, plot_ellipse_with_foci, plot_ellipse_within_rectangle
-from equation import plot_equation
 from extract_shapes import extract_shapes_and_dimensions
-from plot_shapes import plot_shape
+from plot_shapes import plot_shape, equation_operations
 
 # Load spaCy English model
 nlp = English()
@@ -137,116 +136,78 @@ example_questions = {
         "Show me an ellipse with major axis 7 and minor axis 3",
         "Show the area of an ellipse with major axis 10 and minor axis 5",
         "Display an ellipse with its foci",
-        "Show an ellipse inscribed in a rectangle with length 10 and width 5"
     ],
     "equation": [
-        "Plot y = 2x + 3",
-        "Plot y = x**2 - 2x - 3",
-        "Plot y = x**3 - 4x**2 + 5x - 2",
-        "Plot y = e**x",
-        "Plot y = ln(x)",
-        "Plot y = sin(x)",
-        "Plot circle with center (h, k) and radius r: (x-h)**2 + (y-k)**2 = r**2",
-        "Plot ellipse with axes a and b: (x**2/a**2) + (y**2/b**2) = 1",
-        "Plot hyperbola with axes a and b: (x**2/a**2) - (y**2/b**2) = 1",
-        "Plot parabola y = ax**2 + bx + c"
+        "Linear 2*x + 1",
+        "Quadratic x**2 - 4*x + 4",
+        "Cubic x**3 - 6*x**2 + 11*x - 6",
+        "Polynomial x**4 - 7*x**3 + 3*x**2 - 5*x + 9",
+        "Rational (x**2 + 1) / (x - 2)",
+        "Exponential exp(x) - 2",
+        "Logarithmic log(x) - 1",
+        "Trigonometric (Sin) sin(x) - 0.5",
+        "Trigonometric (Cos) cos(x) + 0.5",
+        "Trigonometric (Tan) tan(x) - 1",
+        "Inverse Trigonometric asin(x) + acos(x)",
+        "Hyperbolic sinh(x) - cosh(x)",
+        "Absolute Value Abs(x) - 2",
+        "Square Root sqrt(x) - 2",
+        "Complex x**2 + 1",
+        "Piecewise Piecewise((x**2, x < 0), (x, x >= 0))"
     ]
 }
-
 # Streamlit App
-st.set_page_config(page_title="AI Geometry Plotter", page_icon=":bar_chart:", layout="wide")
+st.set_page_config(page_title="AI Geometry and Equation Solver", page_icon=":bar_chart:", layout="wide")
 
 # Custom CSS for styling
 st.markdown("""
     <style>
-        .main { background-color: #000000; }
-        .stTextArea textarea { height: 120px; }
-        .css-18e3th9 { padding: 1rem; }
-        .stButton button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            transition-duration: 0.4s;
-            cursor: pointer;
-        }
-        .stButton button:hover {
-            background-color: white;
-            color: black;
-            border: 2px solid #4CAF50;
-        }
-        .stFileUploader div, .stSelectbox div {
-            padding: 0;
-        }
-        .stSelectbox [data-testid="stSelectboxLabel"] {
-            font-size: 18px;
-            font-weight: bold;
-            color: #4CAF50;
-        }
-        .stPlotlyChart {
-            width: 600px !important;
-            height: 400px !important;
-        }
+        /* ... [Keep all the existing CSS styles] ... */
     </style>
 """, unsafe_allow_html=True)
 
 # Header
-st.title("AI Geometry Plotter :bar_chart:")
-st.markdown("### Plot geometric shapes and mathematical equations!")
+st.title("AI Geometry and Equation Solver :bar_chart:")
+st.markdown("### Plot geometric shapes and solve mathematical equations!")
 
-# Sidebar for selecting shapes and showing example questions
-st.sidebar.header("Example Questions")
-selected_shape_or_equation = st.sidebar.selectbox("Select a shape or equation:", list(example_questions.keys()), key="shape_selectbox")
-st.sidebar.write("### Example Questions for", selected_shape_or_equation)
-for example in example_questions[selected_shape_or_equation]:
-    st.sidebar.write(f"- {example}")
+def shape_interface():
+    # Sidebar for selecting shapes and showing example questions
+    st.sidebar.header("Example Questions")
+    selected_shape = st.sidebar.selectbox("Select a shape:", [k for k in example_questions.keys() if k != "equation"], key="shape_selectbox")
+    st.sidebar.write("### Example Questions for", selected_shape)
+    for example in example_questions[selected_shape]:
+        st.sidebar.write(f"- {example}")
 
-# Options to customize plot
-fill = st.sidebar.checkbox("Fill Shape", value=False, key="fill_checkbox")
-color = st.sidebar.color_picker("Choose Color", value='#0000FF', key="color_picker")  # Default to blue in hex
+    # Options to customize plot
+    fill = st.sidebar.checkbox("Fill Shape", value=False, key="fill_checkbox")
+    color = st.sidebar.color_picker("Choose Color", value='#0000FF', key="color_picker")  # Default to blue in hex
 
-# Main area
-st.markdown("#### Enter your question about a shape or equation:")
-user_question = st.text_area("Shape or Equation Query", placeholder="e.g., Plot a circle with radius 5", key="query_textarea")
+    # Main area for shapes
+    st.markdown("#### Enter your question about a shape:")
+    user_question = st.text_area("Shape Query", placeholder="e.g., Plot a circle with radius 5", key="shape_query_textarea")
 
-col1, col2 = st.columns(2)
+    if st.button("Generate Shape Plot", key="generate_shape_plot_button"):
+        if user_question:
+            shape_list, dimensions_list, properties = extract_shapes_and_dimensions(user_question)
+            plot_shape(user_question, shape_list, dimensions_list, properties)
 
-if col1.button("Generate Plot", key="generate_plot_button"):
-    if user_question:
-        shape_list,dimensions_list,properties = extract_shapes_and_dimensions(user_question)
-        plot_shape(user_question,shape_list,dimensions_list,properties)
-    # else:
-    #     st.error("Couldn't understand the shape or equation from your question. Supported shapes are: " + ", ".join(supported_shapes.keys()))
+def equation_interface():
+    # Sidebar for equation examples
+    st.sidebar.header("Example Equations")
+    for example in example_questions["equation"]:
+        st.sidebar.write(f"- {example}")
 
-# # Feature to upload or capture an image
-# col2.markdown("#### Or upload an image to extract shapes or equations:")
-# uploaded_file = col2.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"], key="file_uploader")
-# if uploaded_file is not None:
-#     image = Image.open(uploaded_file)
-#     st.image(image, caption='Uploaded Image', use_column_width=True)
+    # Main area for equations
+    equation_operations()
 
-#     # Extract text from image using Tesseract OCR
-#     extracted_text = pytesseract.image_to_string(image)
-#     st.write("#### Extracted Text:")
-#     st.write(extracted_text)
+def main():
+    st.sidebar.title("Navigation")
+    options = st.sidebar.radio("Choose an operation", ["Shapes", "Equation Solver"])
 
-#     # Split extracted text into individual questions
-#     extracted_questions = extracted_text.split('\n')
-#     extracted_questions = [q for q in extracted_questions if q.strip()]
+    if options == "Shapes":
+        shape_interface()
+    elif options == "Equation Solver":
+        equation_interface()
 
-#     # Display a dropdown to select one of the extracted questions
-#     selected_question = st.selectbox("Select a question to plot:", extracted_questions, key="extracted_question_selectbox")
-    
-#     if st.button("Plot Selected Question", key="plot_selected_question_button"):
-#         shape_or_equation, params = identify_shape_or_equation(selected_question)
-#         if shape_or_equation:
-#             plot_shape_or_equation(shape_or_equation, params, fill, color)
-#         else:
-#             st.error("Couldn't understand any shape or equation from the selected question.")
-
-
+if __name__ == "__main__":
+    main()
