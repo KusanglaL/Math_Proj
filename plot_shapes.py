@@ -6,45 +6,38 @@ from equilateral_triangle import plot_equilateral_triangle,plot_equilateral_tria
 from isosceles_triangle import plot_isosceles_triangle,plot_isosceles_triangle_with_area,plot_isosceles_triangle_with_perimeter_or_circumference
 from scalene_triangle import plot_scalene_triangle,plot_scalene_triangle_with_area,plot_scalene_triangle_with_perimeter_or_circumference
 from right_triangle import plot_right_triangle_with_area,plot_right_triangle_with_perimeter,plot_right_triangle
-#from isosceles_triangle import plot_scalene_triangle,plot_scalene_triangle_with_area,plot_scalene_triangle_with_perimeter_or_circumference
 from polygon import plot_regular_polygon,plot_regular_polygon_with_area,plot_regular_polygon_with_perimeter_or_circumference,plot_regular_polygon_with_angles
 from parallelogram import plot_parallelogram, plot_parallelogram_with_area,plot_parallelogram_with_perimeter_or_circumference, plot_parallelogram_with_angles, plot_parallelogram_with_diagonals
 from rhombus import plot_rhombus, plot_rhombus_with_area,plot_rhombus_with_perimeter_or_circumfernce, plot_rhombus_with_angles
 from trapezium import plot_trapezium, plot_trapezium_with_area, plot_isosceles_trapezium, plot_right_trapezium
 from ellipse import plot_ellipse, plot_ellipse_with_area, plot_ellipse_with_foci, plot_ellipse_within_rectangle
-from equation import EquationSolver  
+from equation import AdvancedEquationSolver
 from extract_shapes import extract_shapes_and_dimensions
 import matplotlib.pyplot as plt
 import numpy as np
 import streamlit as st
 import regex as re
-import latex
-
-import streamlit as st
-from equation import EquationSolver
-from sympy import latex
-
+import sympy as sp
 
 def equation_operations():
-    st.header("Equation Solver and Plotter")
+    st.header("Advanced Equation Solver and Plotter")
 
-    # Input for the equation
-    st.write("Enter an equation in terms of x (use standard Python syntax for operations).")
     equation = st.text_input("Enter your equation:", value="x**2 - 4")
 
     solver = None
 
     if equation:
         try:
-            solver = EquationSolver(equation)  # Initialize the solver with the equation
+            solver = AdvancedEquationSolver(equation)
         except ValueError as e:
             st.error(f"Error: {str(e)}")
             return
 
-    # Create tabs for different operations
-    tab1, tab2, tab3, tab4 = st.tabs(["Plot", "Solve", "Derivative", "Integral"])
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+        "Plot", "Solve", "Derivative", "Integral", "Limit", "Series",
+        "Simplify/Factor/Expand", "3D Plot"
+    ])
 
-    # Plotting the equation
     with tab1:
         x_min = st.number_input("Minimum x value:", value=-10.0)
         x_max = st.number_input("Maximum x value:", value=10.0)
@@ -55,7 +48,6 @@ def equation_operations():
                 if fig:
                     st.pyplot(fig)
 
-    # Solving the equation
     with tab2:
         if st.button("Solve Equation"):
             if solver:
@@ -64,13 +56,12 @@ def equation_operations():
                     if solutions:
                         st.write("Solutions:")
                         for sol in solutions:
-                            st.latex(f"x = {latex(sol)}")
+                            st.latex(f"x = {sp.latex(sol[solver.x])}")
                     else:
                         st.write("No real solutions found.")
                 except RuntimeError as e:
                     st.error(f"Error: {str(e)}")
 
-    # Calculating the derivative
     with tab3:
         if st.button("Calculate Derivative"):
             if solver:
@@ -78,11 +69,10 @@ def equation_operations():
                     derivative = solver.derivative()
                     if derivative:
                         st.write("Derivative:")
-                        st.latex(f"\\frac{{d}}{{dx}}({latex(solver.expr)}) = {latex(derivative)}")
+                        st.latex(f"\\frac{{d}}{{dx}}({sp.latex(solver.expr)}) = {sp.latex(derivative)}")
                 except RuntimeError as e:
                     st.error(f"Error: {str(e)}")
 
-    # Calculating the integral
     with tab4:
         if st.button("Calculate Integral"):
             if solver:
@@ -90,7 +80,69 @@ def equation_operations():
                     integral = solver.integral()
                     if integral:
                         st.write("Indefinite Integral:")
-                        st.latex(f"\\int {latex(solver.expr)} \\, dx = {latex(integral)} + C")
+                        st.latex(f"\\int {sp.latex(solver.expr)} \\, dx = {sp.latex(integral)} + C")
+                except RuntimeError as e:
+                    st.error(f"Error: {str(e)}")
+
+    with tab5:
+        point = st.number_input("Limit point:", value=0.0)
+        if st.button("Calculate Limit"):
+            if solver:
+                try:
+                    limit_result = solver.calculate_limit(point)
+                    st.write(f"Limit as x approaches {point}:")
+                    st.latex(f"\lim_{{x \\to {point}}} {sp.latex(solver.expr)} = {sp.latex(limit_result)}")
+                except RuntimeError as e:
+                    st.error(f"Error: {str(e)}")
+
+    with tab6:
+        point = st.number_input("Series expansion point:", value=0.0)
+        n_terms = st.number_input("Number of terms:", value=5, min_value=1, step=1)
+        if st.button("Calculate Series"):
+            if solver:
+                try:
+                    series_result = solver.calculate_series(point, n_terms)
+                    st.write(f"Series expansion around x = {point}:")
+                    st.latex(sp.latex(series_result))
+                except RuntimeError as e:
+                    st.error(f"Error: {str(e)}")
+
+    with tab7:
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("Simplify"):
+                if solver:
+                    try:
+                        simplified = solver.simplify_expression()
+                        st.write("Simplified expression:")
+                        st.latex(sp.latex(simplified))
+                    except RuntimeError as e:
+                        st.error(f"Error: {str(e)}")
+        with col2:
+            if st.button("Factor"):
+                if solver:
+                    try:
+                        factored = solver.factor_expression()
+                        st.write("Factored expression:")
+                        st.latex(sp.latex(factored))
+                    except RuntimeError as e:
+                        st.error(f"Error: {str(e)}")
+        with col3:
+            if st.button("Expand"):
+                if solver:
+                    try:
+                        expanded = solver.expand_expression()
+                        st.write("Expanded expression:")
+                        st.latex(sp.latex(expanded))
+                    except RuntimeError as e:
+                        st.error(f"Error: {str(e)}")
+
+    with tab8:
+        if st.button("Plot 3D"):
+            if solver:
+                try:
+                    fig = solver.plot_3d()
+                    st.pyplot(fig)
                 except RuntimeError as e:
                     st.error(f"Error: {str(e)}")
 
